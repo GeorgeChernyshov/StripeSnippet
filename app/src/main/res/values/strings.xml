@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">StripeSnippet</string>
+
+    <!-- payment integration -->
+    <string name="payment_integration_amount_hint">Enter the money amount here</string>
+    <string name="payment_integration_button">Make Payment</string>
+    <string name="payment_integration_button_hint">Tap the button to create a PaymentIntent on your backend and then open Stripe\'s PaymentSheet to collect test card details.</string>
+    <string name="payment_integration_set_price">Set price</string>
+    <string name="payment_integration_status">Status: %1$s</string>
+    <string name="payment_integration_title">Stripe Payment Integration</string>
+
+    <!-- payment_status -->
+    <string name="payment_status_ready">Ready to pay.</string>
+    <string name="payment_status_opening">Opening payment screen…</string>
+    <string name="payment_status_fetching">Fetching payment intent from backend…</string>
+    <string name="payment_status_fetched">Client secret fetched. Ready for payment.</string>
+    <string name="payment_status_error">Error fetching payment intent.</string>
+    <string name="payment_status_canceled">Payment canceled.</string>
+    <string name="payment_status_successful">Payment successful!</string>
+    <string name="payment_status_failed">Payment failed.</string>
+
+    <!-- screen labels -->
+    <string name="label_payment_integration">Payment Integration</string>
+</resources>
