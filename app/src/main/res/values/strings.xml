@@ -5,6 +5,7 @@
     <string name="payment_integration_amount_hint">Enter the money amount here</string>
     <string name="payment_integration_button">Make Payment</string>
     <string name="payment_integration_button_hint">Tap the button to create a PaymentIntent on your backend and then open Stripe\'s PaymentSheet to collect test card details.</string>
+    <string name="payment_integration_save_button">Save Payment Method for Future Use</string>
     <string name="payment_integration_set_price">Set price</string>
     <string name="payment_integration_status">Status: %1$s</string>
     <string name="payment_integration_title">Stripe Payment Integration</string>

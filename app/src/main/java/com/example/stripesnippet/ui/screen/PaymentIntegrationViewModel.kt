@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stripesnippet.model.CreatePaymentIntentRequest
+import com.example.stripesnippet.model.CreateSetupIntentRequest
+import com.example.stripesnippet.model.EmptyMapWrapper
 import com.example.stripesnippet.repository.PaymentRepository
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,7 +34,8 @@ class PaymentIntegrationViewModel @Inject constructor(
         _uiState.emit(
             _uiState.value.copy(
                 paymentStatus = PaymentStatus.FETCHING,
-                clientSecret = null,
+                setupClientSecret = null,
+                paymentClientSecret = null,
                 isLoading = true
             )
         )
@@ -59,7 +62,7 @@ class PaymentIntegrationViewModel @Inject constructor(
             Log.d(TAG, "Client secret received successfully (not logging full secret).")
 
             _uiState.emit(uiState.value.copy(
-                clientSecret = response.clientSecret,
+                paymentClientSecret = response.clientSecret,
                 paymentStatus = PaymentStatus.FETCHED
             ))
         } catch (e: HttpException) {
@@ -82,10 +85,48 @@ class PaymentIntegrationViewModel @Inject constructor(
                 paymentStatus = PaymentStatus.ERROR
             ))
         } finally {
-            if (uiState.value.clientSecret == null) {
+            if (uiState.value.paymentClientSecret == null) {
                 _uiState.emit(uiState.value.copy(
                     isLoading = false
                 ))
+            }
+        }
+    }
+
+    fun fetchSetupIntent() {
+        viewModelScope.launch {
+            _uiState.emit(
+                _uiState.value.copy(
+                    paymentStatus = PaymentStatus.FETCHING,
+                    setupClientSecret = null,
+                    paymentClientSecret = null,
+                    isLoading = true
+                )
+            )
+
+            try {
+                Log.d(TAG, "Requesting SetupIntent from backend via Repository.")
+                val response = paymentRepository.createSetupIntent(
+                    CreateSetupIntentRequest(EmptyMapWrapper())
+                )
+
+                Log.d(TAG, "SetupIntent client secret received successfully.")
+                _uiState.emit(uiState.value.copy(
+                    setupClientSecret = response?.clientSecret
+                ))
+            } catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorMessage = "Backend Error: HTTP ${e.code()} - ${errorBody ?: "Unknown"}"
+                Log.e(TAG, errorMessage, e)
+            } catch (e: Exception) {
+                val errorMessage = "Network or JSON error: ${e.message ?: "Unknown error"}"
+                Log.e(TAG, errorMessage, e)
+            } finally {
+                if (uiState.value.setupClientSecret == null) {
+                    _uiState.emit(uiState.value.copy(
+                        isLoading = false
+                    ))
+                }
             }
         }
     }
@@ -100,7 +141,7 @@ class PaymentIntegrationViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.emit(uiState.value.copy(
                 paymentStatus = paymentStatus,
-                clientSecret = null,
+                paymentClientSecret = null,
                 isLoading = false
             ))
         }

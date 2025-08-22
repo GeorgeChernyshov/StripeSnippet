@@ -2,13 +2,10 @@ package com.example.stripesnippet.ui.screen
 
 import android.icu.math.BigDecimal
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -29,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.error
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,7 +40,6 @@ import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheet.Builder
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.stripe.android.paymentsheet.PaymentSheetResultCallback
-import com.stripe.android.paymentsheet.rememberPaymentSheet
 
 @Composable
 fun PaymentIntegrationScreen() {
@@ -71,8 +66,8 @@ fun PaymentIntegrationScreen() {
         }
     }
 
-    LaunchedEffect(uiState.value.clientSecret) {
-        uiState.value.clientSecret?.let { secret ->
+    LaunchedEffect(uiState.value.paymentClientSecret) {
+        uiState.value.paymentClientSecret?.let { secret ->
             Log.d(TAG, "Client secret received from ViewModel. Presenting PaymentSheet.")
             viewModel.onPaymentSheetPresented()
 
@@ -86,10 +81,25 @@ fun PaymentIntegrationScreen() {
         }
     }
 
+    LaunchedEffect(uiState.value.setupClientSecret) {
+        uiState.value.setupClientSecret?.let { secret ->
+            Log.d(TAG, "SetupIntent client secret received from ViewModel. Presenting PaymentSheet for saving method.")
+            viewModel.onPaymentSheetPresented()
+            paymentSheet.presentWithSetupIntent(
+                secret,
+                PaymentSheet.Configuration(
+                    merchantDisplayName = "Your Company Name", // Displayed in the sheet
+                    allowsDelayedPaymentMethods = true,
+                )
+            )
+        }
+    }
+
     PaymentIntegrationScreenContent(
         uiState = uiState.value,
         onPriceChanged = { viewModel.setAmount(it) },
-        onPaymentButtonClicked = { viewModel.fetchPaymentIntent( "usd") }
+        onPaymentButtonClicked = { viewModel.fetchPaymentIntent( "usd") },
+        onSaveSetupButtonClicked = { viewModel.fetchSetupIntent() }
     )
 }
 
@@ -97,7 +107,8 @@ fun PaymentIntegrationScreen() {
 fun PaymentIntegrationScreenContent(
     uiState: PaymentIntegrationScreenState,
     onPriceChanged: (BigDecimal) -> Unit,
-    onPaymentButtonClicked: () -> Unit
+    onPaymentButtonClicked: () -> Unit,
+    onSaveSetupButtonClicked: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier
@@ -139,7 +150,12 @@ fun PaymentIntegrationScreenContent(
             TextField(
                 value = uiState.amount.toString(),
                 onValueChange = { value: String ->
-                    val amount = BigDecimal(value)
+                    val amount = try {
+                        BigDecimal(value)
+                    } catch (_ : Exception) {
+                        BigDecimal.ZERO
+                    }
+
                     onPriceChanged(amount)
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -164,6 +180,14 @@ fun PaymentIntegrationScreenContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Button(
+                onClick = onSaveSetupButtonClicked,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
+            ) {
+                Text(stringResource(R.string.payment_integration_save_button))
+            }
         }
     }
 }
@@ -175,7 +199,8 @@ fun PaymentIntegrationScreenContentPreview() {
         PaymentIntegrationScreenContent(
             uiState = PaymentIntegrationScreenState.DEFAULT,
             onPriceChanged = {},
-            onPaymentButtonClicked = {}
+            onPaymentButtonClicked = {},
+            onSaveSetupButtonClicked = {}
         )
     }
 }

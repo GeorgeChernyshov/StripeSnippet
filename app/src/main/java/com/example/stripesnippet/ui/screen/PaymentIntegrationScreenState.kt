@@ -6,14 +6,16 @@ import com.example.stripesnippet.R
 
 data class PaymentIntegrationScreenState(
     val paymentStatus: PaymentStatus,
-    val clientSecret: String?,
+    val setupClientSecret: String?,
+    val paymentClientSecret: String?,
     val amount: BigDecimal,
     val isLoading: Boolean
 ) {
     companion object {
         val DEFAULT = PaymentIntegrationScreenState(
             paymentStatus = PaymentStatus.READY,
-            clientSecret = null,
+            setupClientSecret = null,
+            paymentClientSecret = null,
             amount = BigDecimal.ZERO,
             isLoading = false
         )
